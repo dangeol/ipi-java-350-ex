@@ -80,6 +80,28 @@ public class EmployeService {
 
 
     /**
+     * Methode qui vérifie que les paramètres ci-dessous ne sont ni null, ni négatifs, et que le
+     * matricule commence par un C
+     *
+     * @param matricule
+     * @param caTraite
+     * @param objectifCa
+     * @throws EmployeException
+     */
+    public void checkParametresEntree(String matricule, Long caTraite, Long objectifCa) throws EmployeException {
+        if(caTraite == null || caTraite < 0){
+            throw new EmployeException("Le chiffre d'affaire traité ne peut être négatif ou null !");
+        }
+        if(objectifCa == null || objectifCa < 0){
+            throw new EmployeException("L'objectif de chiffre d'affaire ne peut être négatif ou null !");
+        }
+        if(matricule == null || !matricule.startsWith("C")){
+            throw new EmployeException("Le matricule ne peut être null et doit commencer par un C !");
+        }
+    }
+
+
+    /**
      * Méthode calculant la performance d'un commercial en fonction de ses objectifs et du chiffre d'affaire traité dans l'année.
      * Cette performance lui est affectée et sauvegardée en BDD
      *
@@ -95,19 +117,12 @@ public class EmployeService {
      * @param caTraite le chiffre d'affaire traité par le commercial pendant l'année
      * @param objectifCa l'object de chiffre d'affaire qui lui a été fixé
      *
-     * @throws EmployeException Si le matricule est null ou ne commence pas par un C
+     * @throws EmployeException si n'aucun employé existe dans la BDD avec le matricule donné
      */
     public void calculPerformanceCommercial(String matricule, Long caTraite, Long objectifCa) throws EmployeException {
         //Vérification des paramètres d'entrée
-        if(caTraite == null || caTraite < 0){
-            throw new EmployeException("Le chiffre d'affaire traité ne peut être négatif ou null !");
-        }
-        if(objectifCa == null || objectifCa < 0){
-            throw new EmployeException("L'objectif de chiffre d'affaire ne peut être négatif ou null !");
-        }
-        if(matricule == null || !matricule.startsWith("C")){
-            throw new EmployeException("Le matricule ne peut être null et doit commencer par un C !");
-        }
+        checkParametresEntree(matricule, caTraite, objectifCa);
+
         //Recherche de l'employé dans la base
         Employe employe = employeRepository.findByMatricule(matricule);
         if(employe == null){
@@ -115,8 +130,11 @@ public class EmployeService {
         }
 
         Integer performance = Entreprise.PERFORMANCE_BASE;
+        if (objectifCa == 0) {
+            performance = Entreprise.PERFORMANCE_BASE;
+        }
         //Cas 2
-        if(caTraite >= objectifCa*0.8 && caTraite < objectifCa*0.95){
+        else if(caTraite >= objectifCa*0.8 && caTraite < objectifCa*0.95){
             performance = Math.max(Entreprise.PERFORMANCE_BASE, employe.getPerformance() - 2);
         }
         //Cas 3

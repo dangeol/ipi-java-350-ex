@@ -45,4 +45,14 @@ public class EmployeStepDefinitions implements En {
             Assertions.assertEquals(nom, e.getNom());
         });
     }
+
+    public void CalculPerformanceStepDefinitions() {
+        When("Je cherche un commercial avec le matricule {matricule} qui a une chiffre d'affaire de {caTraite} et un objectif de chiffre d'affaire de {objectifCa}", (String matricule, Long caTraite, Long objectifCa) -> {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
+        });
+        Then("Quand je cherche le commercial portant le matricule {matricule}, je trouve bien une performance de {performance}", (String matricule, Integer performance) -> {
+            Employe e = employeRepository.findByMatricule(matricule);
+            Assertions.assertEquals(performance, e.getPerformance());
+        });
+    }
 }

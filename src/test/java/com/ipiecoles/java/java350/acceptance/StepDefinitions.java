@@ -26,7 +26,7 @@ public class StepDefinitions {
 
     @Step("Soit un employé appelé <prenom> <nom> de matricule <matricule>")
     public void insertEmploye(String prenom, String nom, String matricule) throws EmployeException {
-        employeRepository.save(new Employe(nom, prenom, matricule, LocalDate.now(), Entreprise.SALAIRE_BASE, Entreprise.PERFORMANCE_BASE, 1.0));
+        employeRepository.save(new Employe(nom, prenom, matricule, LocalDate.now(), Entreprise.SALAIRE_BASE, Entreprise.PERFORMANCE_BASE+2, 1.0));
     }
 
     @Step("On vire tous les employés s'il y en a")
@@ -46,5 +46,16 @@ public class StepDefinitions {
         Assertions.assertEquals(salaire, e.getSalaire());
         Assertions.assertEquals(prenom, e.getPrenom());
         Assertions.assertEquals(nom, e.getNom());
+    }
+
+    @Step("Je cherche un commercial avec le matricule <matricule> qui a une chiffre d'affaire de <caTraite> et un objectif de chiffre d'affaire de <objectifCa>")
+    public void calculPerformanceCommercial(String matricule, Long caTraite, Long objectifCa) throws EmployeException {
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCa);
+    }
+
+    @Step("Quand je cherche le commercial portant le matricule <matricule>, je trouve bien une performance de <performance>")
+    public void checkPerformanceCommercial(String matricule, Integer performance) throws EmployeException {
+        Employe e = employeRepository.findByMatricule(matricule);
+        Assertions.assertEquals(performance, e.getPerformance());
     }
 }

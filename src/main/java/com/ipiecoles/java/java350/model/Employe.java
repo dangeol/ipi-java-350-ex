@@ -58,6 +58,8 @@ public class Employe {
         return Entreprise.NB_CONGES_BASE + this.getNombreAnneeAnciennete();
     }
 
+
+
     /**
      * Nombre de jours de RTT =
      *   Nombre de jours dans l'année
@@ -67,23 +69,40 @@ public class Employe {
      * – nombre de jours fériés tombant un jour ouvré
      *
      * Au prorata de son pourcentage d'activité (arrondi au supérieur)
+     * Les dates des jours fériés (notemmant Pâques) sont disponibles pour les années entre 2016 et 2040.
      *
      * @return le nombre de jours de RTT
+     * @throws IllegalArgumentException si l'année est avant 2016 ou après 2040
      */
     public Integer getNbRtt(){
         return getNbRtt(LocalDate.now());
     }
 
-    public Integer getNbRtt(LocalDate d){
-        int i1 = d.isLeapYear() ? 365 : 366;
-        int var = 104;
-        switch (LocalDate.of(d.getYear(),1,1).getDayOfWeek()){
-            case THURSDAY: if(d.isLeapYear()) var =  var + 1; break;
-            case FRIDAY: if(d.isLeapYear()) var =  var + 2; else var =  var + 1;
-            case SATURDAY: var = var + 1; break;
+    public Integer getNbRtt(LocalDate date) {
+        if (date.getYear() < 2016 || date.getYear() > 2040) {
+            throw new IllegalArgumentException("L'année doit être compris entre 2016 et 2040 !");
         }
-        int monInt = (int) Entreprise.joursFeries(d).stream().filter(localDate -> localDate.getDayOfWeek().getValue() <= DayOfWeek.FRIDAY.getValue()).count();
-        return (int) Math.ceil((i1 - Entreprise.NB_JOURS_MAX_FORFAIT - var - Entreprise.NB_CONGES_BASE - monInt) * tempsPartiel);
+        int nombreJoursAnnee = date.isLeapYear() ? 366 : 365;
+        int nombreSamDim = 104;
+        switch (LocalDate.of(date.getYear(),1,1).getDayOfWeek()){
+            case FRIDAY:
+                if(date.isLeapYear()) ++nombreSamDim;
+                break;
+            case SATURDAY:
+                if(date.isLeapYear()) nombreSamDim += 2;
+                else ++nombreSamDim;
+                break;
+            case SUNDAY:
+                ++nombreSamDim;
+                break;
+            default:
+                break;
+        }
+        //Calculer le nombre des jours fériers hors samedi et dimanche
+        int nombreJoursFeriesPasWe = (int) Entreprise.joursFeries(date).stream().filter(localDate
+                -> localDate.getDayOfWeek().getValue() <= DayOfWeek.FRIDAY.getValue()).count();
+        return (int) Math.ceil((nombreJoursAnnee - Entreprise.NB_JOURS_MAX_FORFAIT
+                - nombreSamDim - Entreprise.NB_CONGES_BASE - nombreJoursFeriesPasWe) * tempsPartiel);
     }
 
     /**
@@ -120,8 +139,21 @@ public class Employe {
         return Math.round(prime * this.tempsPartiel * 100)/100.0;
     }
 
-    //Augmenter salaire
-    //public void augmenterSalaire(double pourcentage){}
+    /**
+     * Méthode qui augmente le salaire par un certain pourcentage. Le pourcentage autorisé est un double
+     * entre 0.0 et 1.0. Le pourcentage maximal autorisé est de 1.0 (100%) afin d'empêcher une augmentation
+     * trop importante.
+     * Pour rappel: un double ne peut pas être "null".
+     *
+     * @param pourcentage
+     * @throws IllegalArgumentException
+     */
+    public void augmenterSalaire(double pourcentage) throws IllegalArgumentException {
+        if (pourcentage < 0.0 || pourcentage > 1.0) {
+            throw new IllegalArgumentException("Le pourcentage doit être un double compris entre 0 et 1 !");
+        }
+        this.salaire = this.salaire * (1 + pourcentage);
+    }
 
     public Long getId() {
         return id;
